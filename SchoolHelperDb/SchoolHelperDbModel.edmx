@@ -1,0 +1,458 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="Хранилище SchoolHelperModel" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="HelperProblem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="HelperId" Type="int" Nullable="false" />
+          <Property Name="ProblemId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="HelperRequest">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="HelperId" Type="int" Nullable="false" />
+          <Property Name="RequestId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Problem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Tag" Type="varchar" MaxLength="30" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Request">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="RequsterId" Type="int" Nullable="false" />
+          <Property Name="Text" Type="varchar" MaxLength="200" Nullable="false" />
+          <Property Name="Date" Type="datetime" Nullable="false" />
+          <Property Name="Status" Type="smallint" Nullable="false" />
+        </EntityType>
+        <EntityType Name="RequestProblem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="RequestId" Type="int" Nullable="false" />
+          <Property Name="ProblemId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="User">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="FirstName" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="LastName" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="Phone" Type="varchar" MaxLength="20" Nullable="false" />
+          <Property Name="TelegramName" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="Role" Type="smallint" Nullable="false" />
+        </EntityType>
+        <Association Name="FK_HelperProblem_Problem">
+          <End Role="Problem" Type="Self.Problem" Multiplicity="1" />
+          <End Role="HelperProblem" Type="Self.HelperProblem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="HelperProblem">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HelperProblem_User1">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="HelperProblem" Type="Self.HelperProblem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="HelperProblem">
+              <PropertyRef Name="HelperId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HelperRequest_Request">
+          <End Role="Request" Type="Self.Request" Multiplicity="1" />
+          <End Role="HelperRequest" Type="Self.HelperRequest" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Request">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="HelperRequest">
+              <PropertyRef Name="RequestId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HelperRequest_User1">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="HelperRequest" Type="Self.HelperRequest" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="HelperRequest">
+              <PropertyRef Name="HelperId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Request_User1">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="Request" Type="Self.Request" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Request">
+              <PropertyRef Name="RequsterId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RequestProblem_Problem">
+          <End Role="Problem" Type="Self.Problem" Multiplicity="1" />
+          <End Role="RequestProblem" Type="Self.RequestProblem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="RequestProblem">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RequestProblem_Request">
+          <End Role="Request" Type="Self.Request" Multiplicity="1" />
+          <End Role="RequestProblem" Type="Self.RequestProblem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Request">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="RequestProblem">
+              <PropertyRef Name="RequestId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="Хранилище SchoolHelperModelContainer">
+          <EntitySet Name="HelperProblem" EntityType="Self.HelperProblem" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="HelperRequest" EntityType="Self.HelperRequest" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Problem" EntityType="Self.Problem" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Request" EntityType="Self.Request" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="RequestProblem" EntityType="Self.RequestProblem" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="User" EntityType="Self.User" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="FK_HelperProblem_Problem" Association="Self.FK_HelperProblem_Problem">
+            <End Role="Problem" EntitySet="Problem" />
+            <End Role="HelperProblem" EntitySet="HelperProblem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HelperProblem_User1" Association="Self.FK_HelperProblem_User1">
+            <End Role="User" EntitySet="User" />
+            <End Role="HelperProblem" EntitySet="HelperProblem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HelperRequest_Request" Association="Self.FK_HelperRequest_Request">
+            <End Role="Request" EntitySet="Request" />
+            <End Role="HelperRequest" EntitySet="HelperRequest" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HelperRequest_User1" Association="Self.FK_HelperRequest_User1">
+            <End Role="User" EntitySet="User" />
+            <End Role="HelperRequest" EntitySet="HelperRequest" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Request_User1" Association="Self.FK_Request_User1">
+            <End Role="User" EntitySet="User" />
+            <End Role="Request" EntitySet="Request" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RequestProblem_Problem" Association="Self.FK_RequestProblem_Problem">
+            <End Role="Problem" EntitySet="Problem" />
+            <End Role="RequestProblem" EntitySet="RequestProblem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RequestProblem_Request" Association="Self.FK_RequestProblem_Request">
+            <End Role="Request" EntitySet="Request" />
+            <End Role="RequestProblem" EntitySet="RequestProblem" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="SchoolHelperModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="HelperProblem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="HelperId" Type="Int32" Nullable="false" />
+          <Property Name="ProblemId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Problem" Relationship="Self.FK_HelperProblem_Problem" FromRole="HelperProblem" ToRole="Problem" />
+          <NavigationProperty Name="User" Relationship="Self.FK_HelperProblem_User1" FromRole="HelperProblem" ToRole="User" />
+        </EntityType>
+        <EntityType Name="HelperRequest">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="HelperId" Type="Int32" Nullable="false" />
+          <Property Name="RequestId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Request" Relationship="Self.FK_HelperRequest_Request" FromRole="HelperRequest" ToRole="Request" />
+          <NavigationProperty Name="User" Relationship="Self.FK_HelperRequest_User1" FromRole="HelperRequest" ToRole="User" />
+        </EntityType>
+        <EntityType Name="Problem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Tag" Type="String" MaxLength="30" FixedLength="false" Unicode="false" Nullable="false" />
+          <NavigationProperty Name="HelperProblem" Relationship="Self.FK_HelperProblem_Problem" FromRole="Problem" ToRole="HelperProblem" />
+          <NavigationProperty Name="RequestProblem" Relationship="Self.FK_RequestProblem_Problem" FromRole="Problem" ToRole="RequestProblem" />
+        </EntityType>
+        <EntityType Name="Request">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="RequsterId" Type="Int32" Nullable="false" />
+          <Property Name="Text" Type="String" MaxLength="200" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="Date" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="Status" Type="Int16" Nullable="false" />
+          <NavigationProperty Name="HelperRequest" Relationship="Self.FK_HelperRequest_Request" FromRole="Request" ToRole="HelperRequest" />
+          <NavigationProperty Name="User" Relationship="Self.FK_Request_User1" FromRole="Request" ToRole="User" />
+          <NavigationProperty Name="RequestProblem" Relationship="Self.FK_RequestProblem_Request" FromRole="Request" ToRole="RequestProblem" />
+        </EntityType>
+        <EntityType Name="RequestProblem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="RequestId" Type="Int32" Nullable="false" />
+          <Property Name="ProblemId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Problem" Relationship="Self.FK_RequestProblem_Problem" FromRole="RequestProblem" ToRole="Problem" />
+          <NavigationProperty Name="Request" Relationship="Self.FK_RequestProblem_Request" FromRole="RequestProblem" ToRole="Request" />
+        </EntityType>
+        <EntityType Name="User">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="FirstName" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="LastName" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="Phone" Type="String" MaxLength="20" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="TelegramName" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="Role" Type="Int16" Nullable="false" />
+          <NavigationProperty Name="HelperProblem" Relationship="Self.FK_HelperProblem_User1" FromRole="User" ToRole="HelperProblem" />
+          <NavigationProperty Name="HelperRequest" Relationship="Self.FK_HelperRequest_User1" FromRole="User" ToRole="HelperRequest" />
+          <NavigationProperty Name="Request" Relationship="Self.FK_Request_User1" FromRole="User" ToRole="Request" />
+        </EntityType>
+        <Association Name="FK_HelperProblem_Problem">
+          <End Role="Problem" Type="Self.Problem" Multiplicity="1" />
+          <End Role="HelperProblem" Type="Self.HelperProblem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="HelperProblem">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HelperProblem_User1">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="HelperProblem" Type="Self.HelperProblem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="HelperProblem">
+              <PropertyRef Name="HelperId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HelperRequest_Request">
+          <End Role="Request" Type="Self.Request" Multiplicity="1" />
+          <End Role="HelperRequest" Type="Self.HelperRequest" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Request">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="HelperRequest">
+              <PropertyRef Name="RequestId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HelperRequest_User1">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="HelperRequest" Type="Self.HelperRequest" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="HelperRequest">
+              <PropertyRef Name="HelperId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RequestProblem_Problem">
+          <End Role="Problem" Type="Self.Problem" Multiplicity="1" />
+          <End Role="RequestProblem" Type="Self.RequestProblem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="RequestProblem">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Request_User1">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="Request" Type="Self.Request" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Request">
+              <PropertyRef Name="RequsterId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RequestProblem_Request">
+          <End Role="Request" Type="Self.Request" Multiplicity="1" />
+          <End Role="RequestProblem" Type="Self.RequestProblem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Request">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="RequestProblem">
+              <PropertyRef Name="RequestId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="SchoolHelperDbEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="HelperProblem" EntityType="Self.HelperProblem" />
+          <EntitySet Name="HelperRequest" EntityType="Self.HelperRequest" />
+          <EntitySet Name="Problem" EntityType="Self.Problem" />
+          <EntitySet Name="Request" EntityType="Self.Request" />
+          <EntitySet Name="RequestProblem" EntityType="Self.RequestProblem" />
+          <EntitySet Name="User" EntityType="Self.User" />
+          <AssociationSet Name="FK_HelperProblem_Problem" Association="Self.FK_HelperProblem_Problem">
+            <End Role="Problem" EntitySet="Problem" />
+            <End Role="HelperProblem" EntitySet="HelperProblem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HelperProblem_User1" Association="Self.FK_HelperProblem_User1">
+            <End Role="User" EntitySet="User" />
+            <End Role="HelperProblem" EntitySet="HelperProblem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HelperRequest_Request" Association="Self.FK_HelperRequest_Request">
+            <End Role="Request" EntitySet="Request" />
+            <End Role="HelperRequest" EntitySet="HelperRequest" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HelperRequest_User1" Association="Self.FK_HelperRequest_User1">
+            <End Role="User" EntitySet="User" />
+            <End Role="HelperRequest" EntitySet="HelperRequest" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RequestProblem_Problem" Association="Self.FK_RequestProblem_Problem">
+            <End Role="Problem" EntitySet="Problem" />
+            <End Role="RequestProblem" EntitySet="RequestProblem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Request_User1" Association="Self.FK_Request_User1">
+            <End Role="User" EntitySet="User" />
+            <End Role="Request" EntitySet="Request" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RequestProblem_Request" Association="Self.FK_RequestProblem_Request">
+            <End Role="Request" EntitySet="Request" />
+            <End Role="RequestProblem" EntitySet="RequestProblem" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="Хранилище SchoolHelperModelContainer" CdmEntityContainer="SchoolHelperDbEntities">
+          <EntitySetMapping Name="HelperProblem">
+            <EntityTypeMapping TypeName="SchoolHelperModel.HelperProblem">
+              <MappingFragment StoreEntitySet="HelperProblem">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="HelperId" ColumnName="HelperId" />
+                <ScalarProperty Name="ProblemId" ColumnName="ProblemId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="HelperRequest">
+            <EntityTypeMapping TypeName="SchoolHelperModel.HelperRequest">
+              <MappingFragment StoreEntitySet="HelperRequest">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="HelperId" ColumnName="HelperId" />
+                <ScalarProperty Name="RequestId" ColumnName="RequestId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Problem">
+            <EntityTypeMapping TypeName="SchoolHelperModel.Problem">
+              <MappingFragment StoreEntitySet="Problem">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Tag" ColumnName="Tag" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Request">
+            <EntityTypeMapping TypeName="SchoolHelperModel.Request">
+              <MappingFragment StoreEntitySet="Request">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="RequsterId" ColumnName="RequsterId" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RequestProblem">
+            <EntityTypeMapping TypeName="SchoolHelperModel.RequestProblem">
+              <MappingFragment StoreEntitySet="RequestProblem">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="RequestId" ColumnName="RequestId" />
+                <ScalarProperty Name="ProblemId" ColumnName="ProblemId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="User">
+            <EntityTypeMapping TypeName="SchoolHelperModel.User">
+              <MappingFragment StoreEntitySet="User">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="Phone" ColumnName="Phone" />
+                <ScalarProperty Name="TelegramName" ColumnName="TelegramName" />
+                <ScalarProperty Name="Role" ColumnName="Role" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="false" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="Нет" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>
