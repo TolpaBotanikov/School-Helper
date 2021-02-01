@@ -35,6 +35,11 @@ namespace SchoolHelperBot
 
         private static void Bot_OnMessage(object sender, Telegram.Bot.Args.MessageEventArgs e)
         {
+            if(e.Message.Type != Telegram.Bot.Types.Enums.MessageType.Text)
+            {
+                bot.SendTextMessageAsync(e.Message.Chat.Id, "Пожалуйста отправьте текстовое сообщение");
+                return;
+            }
             var id = e.Message.Chat.Id;
             if (DbManager.GetUser(e.Message.From.Username) == null)
             {
@@ -47,6 +52,7 @@ namespace SchoolHelperBot
             else if(!registratedUsers.ContainsKey(e.Message.Chat.Id))
             {
                 bot.SendTextMessageAsync(e.Message.Chat.Id, "Меню");
+                users[id] = screens.menu;
                 return;
             }
             switch (users[id])
@@ -79,6 +85,7 @@ namespace SchoolHelperBot
                             registratedUsers[id].role = 0;
                             DbManager.CreateUser(registratedUsers[e.Message.Chat.Id]);
                             bot.SendTextMessageAsync(e.Message.Chat.Id, "Вы зарегистрированы");
+                            users[id] = screens.menu;
                             break;
                         case "Ученик":
                             registratedUsers[id].role = 1;
