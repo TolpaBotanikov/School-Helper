@@ -21,12 +21,12 @@ namespace SchoolHelperBot
     class Program
     {
         static TelegramBotClient bot;
-        static Dictionary<long, screens> users;
-        static Dictionary<long, RegistratedUser> registratedUsers;
+        static Dictionary<RegistratedUser, screens> userScreens;
+        static Dictionary<long, RegistratedUser> users;
         static void Main(string[] args)
         {
-            users = new Dictionary<long, screens>();
-            registratedUsers = new Dictionary<long, RegistratedUser>();
+            userScreens = new Dictionary<RegistratedUser, screens>();
+            users = new Dictionary<long, RegistratedUser>();
             bot = new TelegramBotClient("1541324472:AAGytI9-Dl0uPzjrTCCAl-xGA_gAZ-Rmoys");
             bot.OnMessage += Bot_OnMessage;
             bot.StartReceiving();
@@ -35,66 +35,124 @@ namespace SchoolHelperBot
 
         private static void Bot_OnMessage(object sender, Telegram.Bot.Args.MessageEventArgs e)
         {
-            if(e.Message.Type != Telegram.Bot.Types.Enums.MessageType.Text)
+            var id = e.Message.Chat.Id;
+            if (e.Message.Type != Telegram.Bot.Types.Enums.MessageType.Text)
             {
-                bot.SendTextMessageAsync(e.Message.Chat.Id, "Пожалуйста отправьте текстовое сообщение");
+                bot.SendTextMessageAsync(id, "Пожалуйста, отправьте текстовое сообщение");
                 return;
             }
-            var id = e.Message.Chat.Id;
             if (DbManager.GetUser(e.Message.From.Username) == null)
             {
-                if (!registratedUsers.ContainsKey(e.Message.Chat.Id))
+                if (!users.ContainsKey(id))
                 {
                     RegistrateUser(e.Message);
                     return;
                 }
             }
-            else if(!registratedUsers.ContainsKey(e.Message.Chat.Id))
+            RegistratedUser user = users[id];
+            if (!users.ContainsKey(id))
             {
-                bot.SendTextMessageAsync(e.Message.Chat.Id, "Меню");
-                users[id] = screens.menu;
+                bot.SendTextMessageAsync(id, "Меню");
+                var menuTeacherMarkup = new ReplyKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        new KeyboardButton("Запросить помощь"),
+                        new KeyboardButton("Посмотреть отправленные запросы"),
+                    },
+                    new[]
+                    {
+                        new KeyboardButton("Оказать помощь"),
+                        new KeyboardButton("Настройки")
+                     },
+                });
+                var menuStudentMarkup = new ReplyKeyboardMarkup(new[]
+                {
+                    new KeyboardButton("Оказать помощь"),
+                    new KeyboardButton("Настройки")
+                });
+                menuTeacherMarkup.OneTimeKeyboard = true;
+                menuStudentMarkup.OneTimeKeyboard = true;
+                bot.SendTextMessageAsync(id, "**Меню**" +
+                    "\nЗдесь вы можете:" +
+                    (user.role == 0 ? "\n- Запросить помощь." : "")+
+                    (user.role == 0 ? "\n- Посмотреть отправленные запросы." : "") +
+                    "\n- Оказать помощь." +
+                    "\n- Изменить настройки аккаунта.",
+                    replyMarkup: user.role == 0 ? menuTeacherMarkup : menuStudentMarkup);
+                userScreens[user] = screens.menu;
                 return;
             }
-            switch (users[id])
+            switch (userScreens[user])
             {
                 case screens.registrationLastName:
-                    registratedUsers[id].lastName = e.Message.Text;
-                    bot.SendTextMessageAsync(e.Message.Chat.Id, "Введите имя");
-                    users[id] = screens.registrationFirstName;
+                    user.lastName = e.Message.Text;
+                    bot.SendTextMessageAsync(id, "Введите имя");
+                    userScreens[user] = screens.registrationFirstName;
                     break;
                 case screens.registrationFirstName:
-                    registratedUsers[id].firstName = e.Message.Text;
-                    bot.SendTextMessageAsync(e.Message.Chat.Id, "Введите номер телефона");
-                    users[id] = screens.registrationPhone;
+                    user.firstName = e.Message.Text;
+                    bot.SendTextMessageAsync(id, "Введите номер телефона");
+                    userScreens[user] = screens.registrationPhone;
                     break;
                 case screens.registrationPhone:
-                    registratedUsers[id].phone = e.Message.Text;
-                    var markup = new ReplyKeyboardMarkup(new[]
+                    user.phone = e.Message.Text;
+                    var roleMarkup = new ReplyKeyboardMarkup(new[]
                     {
                         new KeyboardButton("Учитель"),
                         new KeyboardButton("Ученик")
                     });
-                    markup.OneTimeKeyboard = true;
-                    bot.SendTextMessageAsync(id, "Вы учитель или ученик?", replyMarkup: markup);
-                    users[id] = screens.registrationRole;
+                    roleMarkup.OneTimeKeyboard = true;
+                    bot.SendTextMessageAsync(id, "Вы учитель или ученик?", replyMarkup: roleMarkup);
+                    userScreens[user] = screens.registrationRole;
                     break;
                 case screens.registrationRole:
                     switch (e.Message.Text)
                     {
                         case "Учитель":
-                            registratedUsers[id].role = 0;
-                            DbManager.CreateUser(registratedUsers[e.Message.Chat.Id]);
-                            bot.SendTextMessageAsync(e.Message.Chat.Id, "Вы зарегистрированы");
-                            users[id] = screens.menu;
+                            user.role = 0;
+                            DbManager.CreateUser(user);
+                            var menuTeacherMarkup = new ReplyKeyboardMarkup(new[]
+                            {
+                                new[]
+                                {
+                                    new KeyboardButton("Запросить помощь"),
+                                    new KeyboardButton("Посмотреть отправленные запросы"),
+                                },
+                                new[]
+                                {
+                                    new KeyboardButton("Оказать помощь"),
+                                    new KeyboardButton("Настройки")
+                                },
+                            });
+                            bot.SendTextMessageAsync(id, "**Меню**" +
+                                "\nЗдесь вы можете:" +
+                                "\n- Запросить помощь."  +
+                                "\n- Посмотреть отправленные запросы." +
+                                "\n- Оказать помощь." +
+                                "\n- Изменить настройки аккаунта.",
+                                replyMarkup: menuTeacherMarkup);
+                            menuTeacherMarkup.OneTimeKeyboard = true;
+                            userScreens[user] = screens.menu;
                             break;
                         case "Ученик":
-                            registratedUsers[id].role = 1;
-                            DbManager.CreateUser(registratedUsers[e.Message.Chat.Id]);
-                            bot.SendTextMessageAsync(e.Message.Chat.Id, "Вы зарегистрированы");
-                            users[id] = screens.menu;
+                            user.role = 1;
+                            DbManager.CreateUser(user);
+                            var menuStudentMarkup = new ReplyKeyboardMarkup(new[]
+                            {
+                                    new KeyboardButton("Оказать помощь"),
+                                    new KeyboardButton("Настройки")
+                            });
+                            bot.SendTextMessageAsync(id, "**Меню**" +
+                                "\nЗдесь вы можете:" +
+                                "\n- Оказать помощь." +
+                                "\n- Изменить настройки аккаунта.",
+                                replyMarkup: menuStudentMarkup);
+                            menuStudentMarkup.OneTimeKeyboard = true;
+                            userScreens[user] = screens.menu;
                             break;
                         default:
-                            bot.SendTextMessageAsync(e.Message.Chat.Id, "Выберите вариант из предложенных");
+                            bot.SendTextMessageAsync(id, "Выберите вариант из предложенных");
                             break;
                     }
                     break;
@@ -105,10 +163,10 @@ namespace SchoolHelperBot
 
         private static void RegistrateUser(Telegram.Bot.Types.Message message)
         {
-            registratedUsers[message.Chat.Id] = new RegistratedUser();
-            registratedUsers[message.Chat.Id].telegramName = message.From.Username;
+            users[message.Chat.Id] = new RegistratedUser();
+            users[message.Chat.Id].telegramName = message.From.Username;
             bot.SendTextMessageAsync(message.Chat.Id, "Вы не зарегистрированы. Введите фамилию");
-            users[message.Chat.Id] = screens.registrationLastName;
+            userScreens[users[message.Chat.Id]] = screens.registrationLastName;
         }
     }
 }
