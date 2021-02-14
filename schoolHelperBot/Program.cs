@@ -10,22 +10,25 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace SchoolHelperBot
 {
-    enum screens 
+    enum Screens // Перечисление всех экранов
     { 
         registrationLastName,
         registrationFirstName,
         registrationPhone,
         registrationRole,
-        menu
+        menu,
+        sendRequest,
+        editRequest,
+        answerRequest
     }
     class Program
     {
         static TelegramBotClient bot;
-        static Dictionary<RegistratedUser, screens> userScreens;
+        static Dictionary<RegistratedUser, Screens> userScreens;
         static Dictionary<long, RegistratedUser> users;
         static void Main(string[] args)
         {
-            userScreens = new Dictionary<RegistratedUser, screens>();
+            userScreens = new Dictionary<RegistratedUser, Screens>();
             users = new Dictionary<long, RegistratedUser>();
             bot = new TelegramBotClient("1541324472:AAGytI9-Dl0uPzjrTCCAl-xGA_gAZ-Rmoys");
             bot.OnMessage += Bot_OnMessage;
@@ -35,7 +38,7 @@ namespace SchoolHelperBot
 
         private static void Bot_OnMessage(object sender, Telegram.Bot.Args.MessageEventArgs e)
         {
-            var id = e.Message.Chat.Id;
+            long id = e.Message.Chat.Id;
             if (e.Message.Type != Telegram.Bot.Types.Enums.MessageType.Text)
             {
                 bot.SendTextMessageAsync(id, "Пожалуйста, отправьте текстовое сообщение");
@@ -53,7 +56,7 @@ namespace SchoolHelperBot
             if (!users.ContainsKey(id))
             {
                 bot.SendTextMessageAsync(id, "Меню");
-                var menuTeacherMarkup = new ReplyKeyboardMarkup(new[]
+                ReplyKeyboardMarkup menuTeacherMarkup = new ReplyKeyboardMarkup(new[]
                 {
                     new[]
                     {
@@ -66,7 +69,7 @@ namespace SchoolHelperBot
                         new KeyboardButton("Настройки")
                      },
                 });
-                var menuStudentMarkup = new ReplyKeyboardMarkup(new[]
+                ReplyKeyboardMarkup menuStudentMarkup = new ReplyKeyboardMarkup(new[]
                 {
                     new KeyboardButton("Оказать помощь"),
                     new KeyboardButton("Настройки")
@@ -80,39 +83,39 @@ namespace SchoolHelperBot
                     "\n- Оказать помощь." +
                     "\n- Изменить настройки аккаунта.",
                     replyMarkup: user.role == 0 ? menuTeacherMarkup : menuStudentMarkup);
-                userScreens[user] = screens.menu;
+                userScreens[user] = Screens.menu;
                 return;
             }
-            switch (userScreens[user])
+            switch (userScreens[user]) // Проверяем, какой экран у пользователя
             {
-                case screens.registrationLastName:
+                case Screens.registrationLastName:
                     user.lastName = e.Message.Text;
                     bot.SendTextMessageAsync(id, "Введите имя");
-                    userScreens[user] = screens.registrationFirstName;
+                    userScreens[user] = Screens.registrationFirstName;
                     break;
-                case screens.registrationFirstName:
+                case Screens.registrationFirstName:
                     user.firstName = e.Message.Text;
                     bot.SendTextMessageAsync(id, "Введите номер телефона");
-                    userScreens[user] = screens.registrationPhone;
+                    userScreens[user] = Screens.registrationPhone;
                     break;
-                case screens.registrationPhone:
+                case Screens.registrationPhone:
                     user.phone = e.Message.Text;
-                    var roleMarkup = new ReplyKeyboardMarkup(new[]
+                    ReplyKeyboardMarkup roleMarkup = new ReplyKeyboardMarkup(new[]
                     {
                         new KeyboardButton("Учитель"),
-                        new KeyboardButton("Ученик")
+                        new KeyboardButton("Ученик"),
                     });
                     roleMarkup.OneTimeKeyboard = true;
                     bot.SendTextMessageAsync(id, "Вы учитель или ученик?", replyMarkup: roleMarkup);
-                    userScreens[user] = screens.registrationRole;
+                    userScreens[user] = Screens.registrationRole;
                     break;
-                case screens.registrationRole:
+                case Screens.registrationRole:
                     switch (e.Message.Text)
                     {
                         case "Учитель":
                             user.role = 0;
                             DbManager.CreateUser(user);
-                            var menuTeacherMarkup = new ReplyKeyboardMarkup(new[]
+                            ReplyKeyboardMarkup menuTeacherMarkup = new ReplyKeyboardMarkup(new[]
                             {
                                 new[]
                                 {
@@ -133,12 +136,12 @@ namespace SchoolHelperBot
                                 "\n- Изменить настройки аккаунта.",
                                 replyMarkup: menuTeacherMarkup);
                             menuTeacherMarkup.OneTimeKeyboard = true;
-                            userScreens[user] = screens.menu;
+                            userScreens[user] = Screens.menu;
                             break;
                         case "Ученик":
                             user.role = 1;
                             DbManager.CreateUser(user);
-                            var menuStudentMarkup = new ReplyKeyboardMarkup(new[]
+                            ReplyKeyboardMarkup menuStudentMarkup = new ReplyKeyboardMarkup(new[]
                             {
                                     new KeyboardButton("Оказать помощь"),
                                     new KeyboardButton("Настройки")
@@ -149,10 +152,59 @@ namespace SchoolHelperBot
                                 "\n- Изменить настройки аккаунта.",
                                 replyMarkup: menuStudentMarkup);
                             menuStudentMarkup.OneTimeKeyboard = true;
-                            userScreens[user] = screens.menu;
+                            userScreens[user] = Screens.menu;
                             break;
                         default:
                             bot.SendTextMessageAsync(id, "Выберите вариант из предложенных");
+                            break;
+                    }
+                    break;
+                case Screens.menu:
+                    switch (e.Message.Text)
+                    {
+                        case "Запросить помощь":
+                            bot.SendTextMessageAsync(id, "Введите текст запроса");
+                            userScreens[user] = Screens.sendRequest;
+                            break;
+                        case "Посмотреть отправленные запросы":
+                            List<Request> requesterRequests = DbManager.GetUserRequests(user.telegramName);
+                            List<KeyboardButton> requesterButtons = new List<KeyboardButton>();
+                            ReplyKeyboardMarkup requestMarkup = new ReplyKeyboardMarkup(new List<KeyboardButton>().AsEnumerable());
+                            foreach (Request request in requesterRequests)
+                            {
+                                bot.SendTextMessageAsync(id, request.Id +
+                                    "\n" + request.Date +
+                                    "\n" + request.Text +
+                                    "\n" + request.Status);
+                                KeyboardButton button = new KeyboardButton("Редактировать запрос " + request.Id);
+                                requesterButtons.Add(button);
+                            }
+                            List<IEnumerable<KeyboardButton>> requesterList = new List<IEnumerable<KeyboardButton>>();
+                            requesterList.Add(requesterButtons.AsEnumerable());
+                            requestMarkup.Keyboard = requesterList.AsEnumerable();
+                            requestMarkup.OneTimeKeyboard = true;
+                            bot.SendTextMessageAsync(id, "Выберите запрос для редактирования", replyMarkup: requestMarkup);
+                            userScreens[user] = Screens.editRequest;
+                            break;
+                        case "Оказать помощь":
+                            List<Request> helperRequests = DbManager.GetAllRequests();
+                            List<KeyboardButton> helperButtons = new List<KeyboardButton>();
+                            ReplyKeyboardMarkup helperMarkup = new ReplyKeyboardMarkup(new List<KeyboardButton>().AsEnumerable());
+                            foreach (Request request in helperRequests)
+                            {
+                                bot.SendTextMessageAsync(id, request.Id +
+                                    "\n" + request.Date +
+                                    "\n" + request.Text +
+                                    "\n" + request.Status);
+                                KeyboardButton button = new KeyboardButton("Редактировать запрос " + request.Id);
+                                helperButtons.Add(button);
+                            }
+                            List<IEnumerable<KeyboardButton>> helperList = new List<IEnumerable<KeyboardButton>>();
+                            helperList.Add(helperButtons.AsEnumerable());
+                            helperMarkup.Keyboard = helperList.AsEnumerable();
+                            helperMarkup.OneTimeKeyboard = true;
+                            bot.SendTextMessageAsync(id, "Выберите запрос, на который хотите ответить", replyMarkup: helperMarkup);
+                            userScreens[user] = Screens.answerRequest;
                             break;
                     }
                     break;
@@ -166,7 +218,7 @@ namespace SchoolHelperBot
             users[message.Chat.Id] = new RegistratedUser();
             users[message.Chat.Id].telegramName = message.From.Username;
             bot.SendTextMessageAsync(message.Chat.Id, "Вы не зарегистрированы. Введите фамилию");
-            userScreens[users[message.Chat.Id]] = screens.registrationLastName;
+            userScreens[users[message.Chat.Id]] = Screens.registrationLastName;
         }
     }
 }
