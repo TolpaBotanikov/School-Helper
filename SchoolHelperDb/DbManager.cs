@@ -39,8 +39,9 @@ namespace SchoolHelperDb
         public static List<Request> GetUserRequests(string name)
         {
             db.User.Load();
+            User user = GetUser(name);
             return db.Request.Where(request => 
-                request.RequsterId == GetUser(name).Id
+                request.RequsterId == user.Id
                 && request.Status != 2).ToList();
         }
 
@@ -57,6 +58,7 @@ namespace SchoolHelperDb
             request.Text = text;
             request.Date = DateTime.Now;
             request.Status = 0;
+            db.Request.Add(request);
             db.SaveChanges();
         }
 

@@ -70,6 +70,7 @@ namespace SchoolHelperBot
                 user.telegramName = dbUser.TelegramName;
                 Menu(id, user.role);
                 userScreens[user] = Screens.menu;
+                return;
             }
             user = users[id];
             switch (userScreens[user]) // Проверяем, какой экран у пользователя
@@ -106,6 +107,7 @@ namespace SchoolHelperBot
                             break;
                         case "Ученик":
                             user.role = 1;
+                            DbManager.CreateUser(user);
                             Menu(id, 1);
                             userScreens[user] = Screens.menu;
                             break;
@@ -125,6 +127,13 @@ namespace SchoolHelperBot
                             List<Request> requesterRequests = DbManager.GetUserRequests(user.telegramName);
                             List<KeyboardButton> requesterButtons = new List<KeyboardButton>();
                             ReplyKeyboardMarkup requestMarkup = new ReplyKeyboardMarkup(new List<KeyboardButton>().AsEnumerable());
+                            if (requesterRequests.Count == 0)
+                            {
+                                bot.SendTextMessageAsync(id, "У вас нет запросов");
+                                Menu(id, user.role);
+                                userScreens[user] = Screens.menu;
+                                break;
+                            }
                             foreach (Request request in requesterRequests)
                             {
                                 bot.SendTextMessageAsync(id, request.Id +
@@ -145,13 +154,20 @@ namespace SchoolHelperBot
                             List<Request> helperRequests = DbManager.GetAllRequests();
                             List<KeyboardButton> helperButtons = new List<KeyboardButton>();
                             ReplyKeyboardMarkup helperMarkup = new ReplyKeyboardMarkup(new List<KeyboardButton>().AsEnumerable());
+                            if (helperRequests.Count == 0)
+                            {
+                                bot.SendTextMessageAsync(id, "В системе нет запросов");
+                                Menu(id, user.role);
+                                userScreens[user] = Screens.menu;
+                                break;
+                            }
                             foreach (Request request in helperRequests)
                             {
                                 bot.SendTextMessageAsync(id, request.Id +
                                     "\n" + request.Date +
                                     "\n" + request.Text +
                                     "\n" + request.Status);
-                                KeyboardButton button = new KeyboardButton("Редактировать запрос " + request.Id);
+                                KeyboardButton button = new KeyboardButton("Принять запрос " + request.Id);
                                 helperButtons.Add(button);
                             }
                             List<IEnumerable<KeyboardButton>> helperList = new List<IEnumerable<KeyboardButton>>();
@@ -190,6 +206,11 @@ namespace SchoolHelperBot
                     userScreens[user] = Screens.menu;
                     break;
                 case Screens.answerRequest:
+                    if (e.Message.Text.Split(' ').Length < 3)
+                    {
+                        bot.SendTextMessageAsync(id, "Выберите вариант из предложенных");
+                        return;
+                    }
                     string answeredRequestId = e.Message.Text.Split(' ')[2];
                     if (!int.TryParse(answeredRequestId, out int answered))
                     {
@@ -251,7 +272,7 @@ namespace SchoolHelperBot
                     new[]
                     {
                         new KeyboardButton("Запросить помощь"),
-                        new KeyboardButton("Посмотреть отправленные запросы"),
+                        new KeyboardButton("Пометить запрос как решенный"),
                     },
                     new[]
                     {
