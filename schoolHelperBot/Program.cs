@@ -18,8 +18,10 @@ namespace SchoolHelperBot
         registrationRole,
         menu,
         sendRequest,
+        selectRequest,
+        answerRequest,
         editRequest,
-        answerRequest
+        resolveRequest
     }
     class Program
     {
@@ -48,44 +50,28 @@ namespace SchoolHelperBot
             {
                 if (!users.ContainsKey(id))
                 {
-                    RegistrateUser(e.Message);
+                    users[id] = new RegistratedUser();
+                    users[id].telegramName = e.Message.From.Username;
+                    bot.SendTextMessageAsync(id, "Вы не зарегистрированы. Введите фамилию");
+                    userScreens[users[id]] = Screens.registrationLastName;
                     return;
                 }
             }
-            RegistratedUser user = users[id];
+            RegistratedUser user;
             if (!users.ContainsKey(id))
             {
-                bot.SendTextMessageAsync(id, "Меню");
-                ReplyKeyboardMarkup menuTeacherMarkup = new ReplyKeyboardMarkup(new[]
-                {
-                    new[]
-                    {
-                        new KeyboardButton("Запросить помощь"),
-                        new KeyboardButton("Посмотреть отправленные запросы"),
-                    },
-                    new[]
-                    {
-                        new KeyboardButton("Оказать помощь"),
-                        new KeyboardButton("Настройки")
-                     },
-                });
-                ReplyKeyboardMarkup menuStudentMarkup = new ReplyKeyboardMarkup(new[]
-                {
-                    new KeyboardButton("Оказать помощь"),
-                    new KeyboardButton("Настройки")
-                });
-                menuTeacherMarkup.OneTimeKeyboard = true;
-                menuStudentMarkup.OneTimeKeyboard = true;
-                bot.SendTextMessageAsync(id, "**Меню**" +
-                    "\nЗдесь вы можете:" +
-                    (user.role == 0 ? "\n- Запросить помощь." : "")+
-                    (user.role == 0 ? "\n- Посмотреть отправленные запросы." : "") +
-                    "\n- Оказать помощь." +
-                    "\n- Изменить настройки аккаунта.",
-                    replyMarkup: user.role == 0 ? menuTeacherMarkup : menuStudentMarkup);
+                user = new RegistratedUser();
+                users[id] = user;
+                User dbUser = DbManager.GetUser(e.Message.From.Username);
+                user.firstName = dbUser.FirstName;
+                user.lastName = dbUser.LastName;
+                user.phone = dbUser.Phone;
+                user.role = dbUser.Role;
+                user.telegramName = dbUser.TelegramName;
+                Menu(id, user.role);
                 userScreens[user] = Screens.menu;
-                return;
             }
+            user = users[id];
             switch (userScreens[user]) // Проверяем, какой экран у пользователя
             {
                 case Screens.registrationLastName:
@@ -115,43 +101,12 @@ namespace SchoolHelperBot
                         case "Учитель":
                             user.role = 0;
                             DbManager.CreateUser(user);
-                            ReplyKeyboardMarkup menuTeacherMarkup = new ReplyKeyboardMarkup(new[]
-                            {
-                                new[]
-                                {
-                                    new KeyboardButton("Запросить помощь"),
-                                    new KeyboardButton("Посмотреть отправленные запросы"),
-                                },
-                                new[]
-                                {
-                                    new KeyboardButton("Оказать помощь"),
-                                    new KeyboardButton("Настройки")
-                                },
-                            });
-                            bot.SendTextMessageAsync(id, "**Меню**" +
-                                "\nЗдесь вы можете:" +
-                                "\n- Запросить помощь."  +
-                                "\n- Посмотреть отправленные запросы." +
-                                "\n- Оказать помощь." +
-                                "\n- Изменить настройки аккаунта.",
-                                replyMarkup: menuTeacherMarkup);
-                            menuTeacherMarkup.OneTimeKeyboard = true;
+                            Menu(id, 0);
                             userScreens[user] = Screens.menu;
                             break;
                         case "Ученик":
                             user.role = 1;
-                            DbManager.CreateUser(user);
-                            ReplyKeyboardMarkup menuStudentMarkup = new ReplyKeyboardMarkup(new[]
-                            {
-                                    new KeyboardButton("Оказать помощь"),
-                                    new KeyboardButton("Настройки")
-                            });
-                            bot.SendTextMessageAsync(id, "**Меню**" +
-                                "\nЗдесь вы можете:" +
-                                "\n- Оказать помощь." +
-                                "\n- Изменить настройки аккаунта.",
-                                replyMarkup: menuStudentMarkup);
-                            menuStudentMarkup.OneTimeKeyboard = true;
+                            Menu(id, 1);
                             userScreens[user] = Screens.menu;
                             break;
                         default:
@@ -166,7 +121,7 @@ namespace SchoolHelperBot
                             bot.SendTextMessageAsync(id, "Введите текст запроса");
                             userScreens[user] = Screens.sendRequest;
                             break;
-                        case "Посмотреть отправленные запросы":
+                        case "Пометить запрос как решенный":
                             List<Request> requesterRequests = DbManager.GetUserRequests(user.telegramName);
                             List<KeyboardButton> requesterButtons = new List<KeyboardButton>();
                             ReplyKeyboardMarkup requestMarkup = new ReplyKeyboardMarkup(new List<KeyboardButton>().AsEnumerable());
@@ -175,16 +130,16 @@ namespace SchoolHelperBot
                                 bot.SendTextMessageAsync(id, request.Id +
                                     "\n" + request.Date +
                                     "\n" + request.Text +
-                                    "\n" + request.Status);
-                                KeyboardButton button = new KeyboardButton("Редактировать запрос " + request.Id);
+                                    "\n" + (request.Status == 0 ? "Отправлен" : "В работе"));
+                                KeyboardButton button = new KeyboardButton("Запрос " + request.Id + " решен");
                                 requesterButtons.Add(button);
                             }
                             List<IEnumerable<KeyboardButton>> requesterList = new List<IEnumerable<KeyboardButton>>();
                             requesterList.Add(requesterButtons.AsEnumerable());
                             requestMarkup.Keyboard = requesterList.AsEnumerable();
                             requestMarkup.OneTimeKeyboard = true;
-                            bot.SendTextMessageAsync(id, "Выберите запрос для редактирования", replyMarkup: requestMarkup);
-                            userScreens[user] = Screens.editRequest;
+                            bot.SendTextMessageAsync(id, "Выберите запрос", replyMarkup: requestMarkup);
+                            userScreens[user] = Screens.resolveRequest;
                             break;
                         case "Оказать помощь":
                             List<Request> helperRequests = DbManager.GetAllRequests();
@@ -206,19 +161,119 @@ namespace SchoolHelperBot
                             bot.SendTextMessageAsync(id, "Выберите запрос, на который хотите ответить", replyMarkup: helperMarkup);
                             userScreens[user] = Screens.answerRequest;
                             break;
+                        default:
+                            bot.SendTextMessageAsync(id, "Выберите вариант из предложенных");
+                            break;
                     }
                     break;
-            }
+                case Screens.sendRequest:
+                    DbManager.NewRequest(user.telegramName, e.Message.Text);
+                    bot.SendTextMessageAsync(id, "Запрос отправлен!");
+                    Menu(id, user.role);
+                    userScreens[user] = Screens.menu;
+                    break;
+                case Screens.resolveRequest:
+                    string resolvedRequestId = e.Message.Text.Split(' ')[1];
+                    if (!int.TryParse(resolvedRequestId, out int resolved))
+                    {
+                        bot.SendTextMessageAsync(id, "Выберите вариант из предложенных");
+                        return;
+                    }
+                    if (DbManager.GetRequest(resolved) == null)
+                    {
+                        bot.SendTextMessageAsync(id, "Выберите вариант из предложенных");
+                        return;
+                    }
+                    DbManager.ResolveRequest(resolved);
+                    bot.SendTextMessageAsync(id, "Запрос решен!");
+                    Menu(id, user.role);
+                    userScreens[user] = Screens.menu;
+                    break;
+                case Screens.answerRequest:
+                    string answeredRequestId = e.Message.Text.Split(' ')[2];
+                    if (!int.TryParse(answeredRequestId, out int answered))
+                    {
+                        bot.SendTextMessageAsync(id, "Выберите вариант из предложенных");
+                        return;
+                    }
+                    if (DbManager.GetRequest(answered) == null)
+                    {
+                        bot.SendTextMessageAsync(id, "Выберите вариант из предложенных");
+                        return;
+                    }
+                    User requester = DbManager.AnswerRequest(answered, user.telegramName);
+                    bot.SendTextMessageAsync(id, "Запрос принят! " +
+                        "\nСвяжитесь с учителем для получения подробной информации." +
+                        "\nТелефон: " + requester.Phone +
+                        "\nИмя в Telegram: @" + requester.TelegramName);
+                    Menu(id, user.role);
+                    userScreens[user] = Screens.menu;
+                    break;
+                //case Screens.selectRequest:
+                //    if (int.TryParse(e.Message.Text, out int result))
+                //    {
+                //        Request request = DbManager.GetRequest(result);
+                //        if (request == null)
+                //        {
+                //            bot.SendTextMessageAsync(id, "Выберите вариант из предложенных");
+                //            break;
+                //        }
+                //        ReplyKeyboardMarkup editRequestMarkup = new ReplyKeyboardMarkup(new[]
+                //        {
+                //                new KeyboardButton("Изменить запрос " + result),
+                //                new KeyboardButton("Пометить запрос " + result + " как решенный")
+                //            });
+                //        bot.SendTextMessageAsync(id, "Что вы хотите сделать с этим запросом", replyMarkup: editRequestMarkup);
+                //        userScreens[user] = Screens.editRequest;
+                //    }
+                //    else
+                //    {
+                //        bot.SendTextMessageAsync(id, "Выберите вариант из предложенных");
+                //    }
+                //    break;
+                //case Screens.editRequest:
+                //    string[] message = e.Message.Text.Split(' ');
+                //    if (message[0] == "Изменить")
+                //    {
 
+                //    }
+                //    break;
+
+        }
+            
             //bot.SendTextMessageAsync(chatId, e.Message.Text);
         }
 
-        private static void RegistrateUser(Telegram.Bot.Types.Message message)
+        private static void Menu(long id, int role)
         {
-            users[message.Chat.Id] = new RegistratedUser();
-            users[message.Chat.Id].telegramName = message.From.Username;
-            bot.SendTextMessageAsync(message.Chat.Id, "Вы не зарегистрированы. Введите фамилию");
-            userScreens[users[message.Chat.Id]] = Screens.registrationLastName;
+            ReplyKeyboardMarkup menuTeacherMarkup = new ReplyKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        new KeyboardButton("Запросить помощь"),
+                        new KeyboardButton("Посмотреть отправленные запросы"),
+                    },
+                    new[]
+                    {
+                        new KeyboardButton("Оказать помощь"),
+                        new KeyboardButton("Настройки")
+                     },
+                });
+            ReplyKeyboardMarkup menuStudentMarkup = new ReplyKeyboardMarkup(new[]
+            {
+                    new KeyboardButton("Оказать помощь"),
+                    new KeyboardButton("Настройки")
+            });
+            menuTeacherMarkup.OneTimeKeyboard = true;
+            menuStudentMarkup.OneTimeKeyboard = true;
+            bot.SendTextMessageAsync(id, "**Меню**" +
+                "\nЗдесь вы можете:" +
+                (role == 0 ? "\n- Запросить помощь." : "") +
+                (role == 0 ? "\n- Посмотреть отправленные запросы." : "") +
+                "\n- Оказать помощь." +
+                "\n- Изменить настройки аккаунта.",
+                replyMarkup: role == 0 ? menuTeacherMarkup : menuStudentMarkup);
+            return;
         }
     }
 }

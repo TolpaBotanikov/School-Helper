@@ -17,6 +17,13 @@ namespace SchoolHelperDb
             db.User.Load();
             return db.User.FirstOrDefault(user => user.TelegramName == name);
         }
+
+        public static User GetUser(int id)
+        {
+            db.User.Load();
+            return db.User.FirstOrDefault(user => user.Id == id);
+        }
+
         public static void CreateUser(RegistratedUser regUser)
         {
             User user = new User();
@@ -33,13 +40,48 @@ namespace SchoolHelperDb
         {
             db.User.Load();
             return db.Request.Where(request => 
-                request.RequsterId == GetUser(name).Id).ToList();
+                request.RequsterId == GetUser(name).Id
+                && request.Status != 2).ToList();
         }
 
         public static List<Request> GetAllRequests()
         {
             db.Request.Load();
-            return db.Request.ToList();
+            return db.Request.Where(request => request.Status != 2).ToList();
+        }
+
+        public static void NewRequest(string name, string text)
+        {
+            Request request = new Request();
+            request.RequsterId = GetUser(name).Id;
+            request.Text = text;
+            request.Date = DateTime.Now;
+            request.Status = 0;
+            db.SaveChanges();
+        }
+
+        public static Request GetRequest(int id)
+        {
+            db.Request.Load();
+            return db.Request.FirstOrDefault(request => request.Id == id);
+        }
+
+        public static void ResolveRequest(int id)
+        {
+            db.Request.Load();
+            GetRequest(id).Status = 2;
+            db.SaveChanges();
+        }
+
+        public static User AnswerRequest(int id, string helperName)
+        {
+            db.Request.Load();
+            Request request = GetRequest(id);
+            HelperRequest hr = new HelperRequest();
+            hr.RequestId = id;
+            hr.HelperId = GetUser(helperName).Id;
+            db.SaveChanges();
+            return GetUser(request.RequsterId);
         }
     }
 }
