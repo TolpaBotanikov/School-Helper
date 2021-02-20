@@ -136,10 +136,10 @@ namespace SchoolHelperBot
                             }
                             foreach (Request request in requesterRequests)
                             {
-                                bot.SendTextMessageAsync(id, request.Id +
-                                    "\n" + request.Date +
+                                bot.SendTextMessageAsync(id, "Номер: " +  request.Id +
+                                    "\nДата:" + request.Date +
                                     "\n" + request.Text +
-                                    "\n" + (request.Status == 0 ? "Отправлен" : "В работе"));
+                                    "\nСтатус: " + (request.Status == 0 ? "Отправлен" : "В работе"));
                                 KeyboardButton button = new KeyboardButton("Запрос " + request.Id + " решен");
                                 requesterButtons.Add(button);
                             }
@@ -163,10 +163,10 @@ namespace SchoolHelperBot
                             }
                             foreach (Request request in helperRequests)
                             {
-                                bot.SendTextMessageAsync(id, request.Id +
-                                    "\n" + request.Date +
+                                bot.SendTextMessageAsync(id, "Номер: " + request.Id +
+                                    "\nДата: " + request.Date +
                                     "\n" + request.Text +
-                                    "\n" + request.Status);
+                                    "\nСтатус: " + request.Status);
                                 KeyboardButton button = new KeyboardButton("Принять запрос " + request.Id);
                                 helperButtons.Add(button);
                             }

@@ -82,6 +82,7 @@ namespace SchoolHelperDb
             HelperRequest hr = new HelperRequest();
             hr.RequestId = id;
             hr.HelperId = GetUser(helperName).Id;
+            db.HelperRequest.Add(hr);
             db.SaveChanges();
             return GetUser(request.RequsterId);
         }
