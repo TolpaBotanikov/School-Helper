@@ -27,9 +27,9 @@ namespace SchoolHelperDb
         public static void CreateUser(RegistratedUser regUser)
         {
             User user = new User();
-            user.FirstName = regUser.firstName;
-            user.LastName = regUser.lastName;
-            user.Phone = regUser.phone;
+            user.FirstName = regUser.firstName != null ? regUser.firstName : "-";
+            user.LastName = regUser.lastName != null ? regUser.lastName : "-";
+            user.Phone = regUser.phone != null ? regUser.phone : "-";
             user.Role = regUser.role;
             user.TelegramName = regUser.telegramName;
             db.User.Add(user);
